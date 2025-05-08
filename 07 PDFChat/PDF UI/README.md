@@ -1,3 +1,8 @@
+```
+inv dev
+inv devworker
+```
+
 # First Time Setup
 
 ## Using Pipenv [Recommended]

@@ -1,3 +1,6 @@
+```
+python app.py
+```
 Use this to run a local file-upload server.
 
 # Setup
