@@ -4,13 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-langchain = "*"
+langchain = ">=0.2.0"
+langchain-core = ">=0.2.0"
+langchain-openai = ">=0.2.0"
+langchain-community = ">=0.2.0"
+langchain-chroma = ">=0.1.0"
+chromadb = "*"
 openai = "*"
 python-dotenv = "*"
 tiktoken = "*"
-chromadb = "*"
-langchain-community = "*"
-langchain-chroma = "*"
+
 
 [dev-packages]
 

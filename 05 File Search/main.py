@@ -1,11 +1,12 @@
 from dotenv import load_dotenv
 from langchain_community.document_loaders import TextLoader
-from langchain.text_splitter import CharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 # from langchain_community.vectorstores.chroma import Chroma
 from langchain_chroma import Chroma
 load_dotenv()
 
+#Without LLM, SEMANTIC SEARCH ONLY
 embeddings = OpenAIEmbeddings()
 
 text_splitter = CharacterTextSplitter(
