@@ -1,0 +1,148 @@
+FINANCE AND EXPENSE POLICY — ACME CORPORATION
+Version 2.1 | Last Updated: February 2024
+Access Level: Manager
+Department: Finance
+
+====================================================
+SECTION 1: PURPOSE
+====================================================
+
+This policy governs how employees incur, document, and submit business expenses. All employees who incur expenses on behalf of ACME Corporation must follow these procedures.
+
+====================================================
+SECTION 2: EXPENSE REIMBURSEMENT
+====================================================
+
+2.1 SUBMISSION DEADLINE
+All expense reports must be submitted within 30 days of the expense being incurred. Expenses submitted after 30 days may not be reimbursed.
+
+2.2 REQUIRED DOCUMENTATION
+All expenses require:
+- Original receipt (digital copies accepted)
+- Business purpose stated clearly
+- Names of attendees for meals/entertainment
+- Manager approval for expenses over $100
+
+2.3 REIMBURSEMENT TIMELINE
+Approved expense reports are reimbursed within 15 business days via direct deposit to the employee's paycheck.
+
+====================================================
+SECTION 3: TRAVEL POLICY
+====================================================
+
+3.1 BOOKING REQUIREMENTS
+All business travel must be booked through the company's approved travel portal (travel.acme-corp.com) or via the corporate travel agency.
+
+3.2 AIR TRAVEL
+- Domestic flights: Economy class required
+- International flights over 8 hours: Business class permitted with VP approval
+- Book at least 14 days in advance when possible to minimize costs
+- Maximum flight cost: $800 domestic, $3,000 international
+
+3.3 HOTELS
+- Book approved hotels from the preferred vendor list
+- Standard rate cap: $200/night domestic, $350/night international
+- Premium cities (New York, San Francisco, London): $300 domestic cap
+
+3.4 PER DIEM RATES
+Daily meal allowances (receipts NOT required for amounts under the per diem):
+- Breakfast: $20
+- Lunch: $25
+- Dinner: $50
+- Incidentals (tips, transport, etc.): $25/day
+
+Total daily per diem: $120
+
+3.5 CAR RENTALS
+- Economy or compact vehicles only
+- Always purchase the collision damage waiver (CDW)
+- Mileage reimbursement for personal vehicle use: $0.67/mile (IRS rate)
+
+====================================================
+SECTION 4: PURCHASE AUTHORIZATION LIMITS
+====================================================
+
+4.1 EMPLOYEE SPENDING LIMITS
+Individual employees may approve the following without additional sign-off:
+- Under $100:     No approval required
+- $100 - $500:    Direct manager approval
+- $500 - $2,000:  Department head approval
+- $2,000 - $10,000: Director-level approval
+- Over $10,000:   VP + Finance team approval
+
+4.2 PROHIBITED EXPENSES
+The following will NEVER be reimbursed:
+- Alcohol (unless part of approved client entertainment with VP approval)
+- Personal expenses (gym, personal meals not during travel, etc.)
+- Traffic fines, parking tickets
+- First-class domestic air travel
+- Personal vehicle insurance
+- Spouse/partner travel (unless specifically approved)
+
+====================================================
+SECTION 5: CORPORATE CREDIT CARDS
+====================================================
+
+5.1 ELIGIBILITY
+Corporate credit cards are issued to:
+- All managers and above (automatic)
+- Employees who travel more than 4 times per year
+- Employees with documented need (approved by HR + Finance)
+
+5.2 CARD USAGE
+Corporate cards are for business expenses ONLY. Personal use is grounds for disciplinary action and immediate card revocation.
+
+5.3 MONTHLY RECONCILIATION
+All corporate card holders must reconcile their card statement by the 5th business day of each month.
+
+====================================================
+SECTION 6: BUDGET MANAGEMENT
+====================================================
+
+6.1 BUDGET CYCLE
+The annual budget cycle runs from October to December for the following fiscal year. Department heads submit budget requests using the standard template.
+
+6.2 BUDGET APPROVAL HIERARCHY
+- Department budgets: approved by VP of Finance
+- Project budgets over $50K: requires C-level approval
+- Unbudgeted items: require one level above standard purchase authority
+
+6.3 QUARTERLY REVIEWS
+Finance holds quarterly budget reviews with all department heads to track spending versus plan and address variances.
+
+====================================================
+SECTION 7: ANNUAL BONUS STRUCTURE
+====================================================
+(CONFIDENTIAL — Manager and above access only)
+
+7.1 BONUS ELIGIBILITY
+All full-time employees who have been employed for at least 6 months during the performance year are eligible for an annual performance bonus.
+
+7.2 BONUS CALCULATION
+Base bonus percentage by role level:
+- Individual Contributor: 5% - 10% of annual salary
+- Senior Individual Contributor: 8% - 15% of annual salary
+- Manager: 10% - 20% of annual salary
+- Senior Manager / Director: 15% - 25% of annual salary
+- VP and above: 20% - 40% of annual salary
+
+7.3 PERFORMANCE MULTIPLIER
+The bonus percentage is modified by the annual performance rating:
+- Rating 1 (Needs Improvement): 0x multiplier (no bonus)
+- Rating 2 (Developing): 0.5x multiplier
+- Rating 3 (Meets Expectations): 1.0x multiplier
+- Rating 4 (Exceeds Expectations): 1.25x multiplier
+- Rating 5 (Exceptional): 1.5x multiplier
+
+Example: Manager with $80,000 salary, 15% base bonus, Rating 4:
+$80,000 × 15% × 1.25 = $15,000 bonus
+
+7.4 COMPANY PERFORMANCE MODIFIER
+In addition to individual performance, the company applies a multiplier based on overall company performance:
+- Below 80% of targets: 0.75x
+- 80-99% of targets: 1.0x
+- 100%+ of targets: 1.1x - 1.25x
+
+====================================================
+END OF FINANCE POLICY
+====================================================

@@ -1,0 +1,87 @@
+EXECUTIVE COMPENSATION REPORT — ACME CORPORATION
+Fiscal Year 2024
+Access Level: Confidential
+Department: Finance
+
+====================================================
+IMPORTANT: THIS DOCUMENT IS STRICTLY CONFIDENTIAL
+Access restricted to: Admin level only
+Unauthorized access or disclosure is grounds for immediate termination
+====================================================
+
+SECTION 1: C-SUITE COMPENSATION SUMMARY
+
+CEO — James Anderson
+Base Salary: $850,000
+Annual Bonus Target: 100% of base ($850,000)
+2024 Bonus Paid: $1,020,000 (120% of target — company exceeded goals)
+Stock Options Granted: 500,000 shares @ $12.50 strike price
+Total Compensation Package: $3.2M
+
+CTO — Sarah Chen
+Base Salary: $650,000
+Annual Bonus Target: 75% of base ($487,500)
+2024 Bonus Paid: $545,000
+Stock Options Granted: 350,000 shares
+Total Compensation Package: $2.1M
+
+CFO — Robert Hayes
+Base Salary: $620,000
+Annual Bonus Target: 75% of base ($465,000)
+2024 Bonus Paid: $510,000
+Stock Options Granted: 300,000 shares
+Total Compensation Package: $1.9M
+
+====================================================
+SECTION 2: VP-LEVEL COMPENSATION BANDS
+====================================================
+
+VP Engineering: $380,000 - $450,000 base
+VP Sales: $350,000 - $420,000 base + commission structure
+VP Marketing: $320,000 - $390,000 base
+VP Operations: $310,000 - $370,000 base
+VP Finance: $340,000 - $400,000 base
+
+All VPs: 20-40% annual bonus target
+All VPs: Stock option grants of 50,000-150,000 shares
+
+====================================================
+SECTION 3: BOARD OF DIRECTORS COMPENSATION
+====================================================
+
+Annual Board Retainer: $75,000 per board member
+Committee Chair Additional: $15,000/year
+Meeting Attendance Fee: $5,000 per meeting
+Stock Grants: 10,000 shares per year
+
+Board Members (FY2024):
+- Margaret Thompson (Chair): $125,000 + 10,000 shares
+- David Kim (Audit Committee Chair): $90,000 + 10,000 shares
+- Lisa Park: $75,000 + 10,000 shares
+- John Williams: $75,000 + 10,000 shares
+- Sandra Alvarez: $75,000 + 10,000 shares
+
+====================================================
+SECTION 4: EQUITY COMPENSATION PROGRAM
+====================================================
+
+4.1 STOCK OPTION POOL
+Total authorized option pool: 15,000,000 shares
+Granted to date: 8,234,500 shares
+Available for future grants: 6,765,500 shares
+
+4.2 VESTING SCHEDULE (Standard)
+- 1 year cliff: 25% vests after 12 months
+- Monthly vesting: remaining 75% vests monthly over 36 months
+- Standard grant period: 4 years total
+
+4.3 RECENT GRANTS (Q4 2024)
+Engineering Senior Staff: 25,000 shares average
+Sales Director level: 30,000 shares average
+Product Management: 20,000 shares average
+
+====================================================
+THIS DOCUMENT CONTAINS MATERIAL NON-PUBLIC INFORMATION.
+DO NOT SHARE, COPY, OR DISTRIBUTE WITHOUT EXPLICIT
+AUTHORIZATION FROM THE CFO AND LEGAL COUNSEL.
+====================================================

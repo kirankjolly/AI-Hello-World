@@ -1,0 +1,172 @@
+IT SECURITY POLICY — ACME CORPORATION
+Version 3.0 | Last Updated: March 2024
+Access Level: Public
+Department: IT
+
+====================================================
+SECTION 1: PURPOSE AND SCOPE
+====================================================
+
+This policy establishes security requirements for all employees, contractors, and vendors who access ACME Corporation's information systems, networks, and data.
+
+Non-compliance with this policy may result in disciplinary action, up to and including termination.
+
+====================================================
+SECTION 2: PASSWORD REQUIREMENTS
+====================================================
+
+2.1 PASSWORD STANDARDS
+All passwords must:
+- Be at least 12 characters long
+- Include at least one uppercase letter
+- Include at least one lowercase letter
+- Include at least one number
+- Include at least one special character (!@#$%^&*)
+- Not contain your name, username, or common words
+
+2.2 PASSWORD ROTATION
+- Passwords must be changed every 90 days
+- Cannot reuse the last 10 passwords
+- Passwords may not be written down or shared
+
+2.3 MULTI-FACTOR AUTHENTICATION (MFA)
+MFA is required for:
+- All email and company systems
+- VPN access
+- Any system containing customer data
+- All admin-level accounts
+
+Approved MFA methods: authenticator app (preferred), SMS (fallback)
+
+====================================================
+SECTION 3: ACCEPTABLE USE POLICY
+====================================================
+
+3.1 COMPANY EQUIPMENT
+Company computers, phones, and other equipment are provided for business use. Limited personal use is permitted but:
+- Must not interfere with work duties
+- Must comply with this policy
+- Must not install unauthorized software
+
+3.2 PROHIBITED ACTIVITIES
+The following are strictly prohibited on company systems:
+- Accessing, storing, or distributing illegal content
+- Using company systems to run personal businesses
+- Bypassing security controls or firewalls
+- Mining cryptocurrency
+- Accessing peer-to-peer file sharing networks
+- Installing unauthorized software or applications
+
+3.3 MONITORING
+Company systems are monitored for security purposes. Employees have no expectation of privacy on company systems.
+
+====================================================
+SECTION 4: DATA CLASSIFICATION
+====================================================
+
+4.1 CLASSIFICATION LEVELS
+
+PUBLIC
+- Information approved for public distribution
+- Examples: marketing materials, press releases, public website content
+- Can be shared externally without restriction
+
+INTERNAL
+- Day-to-day business information
+- Examples: internal memos, meeting notes, project plans
+- May be shared internally; external sharing requires manager approval
+
+CONFIDENTIAL
+- Sensitive business information
+- Examples: financial reports, customer data, employee records
+- Must not be shared externally without VP approval
+- Must be encrypted when stored or transmitted
+
+RESTRICTED
+- Most sensitive information
+- Examples: trade secrets, acquisition plans, C-level compensation
+- Access strictly controlled on need-to-know basis
+- Must be encrypted and access logged
+
+4.2 DATA HANDLING REQUIREMENTS
+- Confidential and Restricted data must be encrypted at rest and in transit
+- Never store sensitive data on personal devices
+- Use company-approved cloud storage only (SharePoint, Teams)
+- Do not email Restricted data without encryption
+
+====================================================
+SECTION 5: REMOTE ACCESS AND VPN
+====================================================
+
+5.1 VPN REQUIREMENT
+Employees must use the company VPN when:
+- Accessing any internal systems remotely
+- Working from public Wi-Fi networks
+- Accessing any Confidential or Restricted data remotely
+
+5.2 HOME NETWORK SECURITY
+When working from home:
+- Use a secured, password-protected Wi-Fi network
+- Keep your home router firmware up to date
+- Do not allow others to use company equipment
+
+====================================================
+SECTION 6: INCIDENT REPORTING
+====================================================
+
+6.1 WHAT TO REPORT
+Report immediately to IT Security (security@acme-corp.com):
+- Suspected phishing emails
+- Malware or ransomware
+- Unauthorized access to systems
+- Lost or stolen company devices
+- Any security breach or suspicious activity
+
+6.2 RESPONSE TIME
+IT Security will respond to:
+- Critical incidents: within 1 hour
+- High severity: within 4 hours
+- Medium/Low severity: within 24 hours
+
+6.3 NON-RETALIATION
+Employees who report security incidents in good faith will not face retaliation.
+
+====================================================
+SECTION 7: SOFTWARE AND DEVICE MANAGEMENT
+====================================================
+
+7.1 APPROVED SOFTWARE
+All software installed on company devices must be:
+- Approved by IT (see the approved software list at it.acme-corp.com)
+- Licensed appropriately
+- Kept up to date with security patches
+
+7.2 PERSONAL DEVICES (BYOD)
+Personal devices may be used for email with IT approval. Requirements:
+- Device must have MDM (Mobile Device Management) enrolled
+- Device must have current OS version
+- Device must have screen lock enabled
+- Company data must be encrypted on the device
+
+7.3 DEVICE ENCRYPTION
+All company laptops and mobile devices must have:
+- Full-disk encryption enabled (FileVault on Mac, BitLocker on Windows)
+- Remote wipe capability configured
+
+====================================================
+SECTION 8: PHYSICAL SECURITY
+====================================================
+
+8.1 OFFICE ACCESS
+- ID badges must be worn visibly at all times in office
+- Do not allow tailgating (following someone through a secure door)
+- Report lost badges immediately to Facilities
+
+8.2 CLEAN DESK POLICY
+- Lock computer screens when leaving your desk
+- Do not leave sensitive documents visible at your desk
+- Shred sensitive printed documents before disposal
+
+====================================================
+END OF IT SECURITY POLICY
+====================================================
