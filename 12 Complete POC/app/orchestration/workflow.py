@@ -158,7 +158,7 @@ def node_classify_and_route(state: WorkflowState) -> dict:
     """
     log_workflow_step("classify_and_route", state["user_id"])
 
-    result, tool_name, is_tool = run_agent(state["query"], state["user_id"])
+    result, tool_name, is_tool = run_agent(state["query"], state["user_id"], state["user_role"])
 
     if is_tool:
         # Agent used a tool — we have a result already

@@ -40,7 +40,12 @@ from typing import Optional, Tuple
 from langchain_core.messages import SystemMessage, HumanMessage
 
 from app.config import ANTHROPIC_API_KEY, OPENAI_API_KEY, LLM_MODEL, LLM_PROVIDER
-from app.tools.company_tools import ALL_TOOLS, TOOL_NAMES, calculate_bonus, lookup_employee_policy, summarize_document
+from app.models.schemas import UserRole
+from app.security.permissions import get_allowed_access_levels
+from app.tools.company_tools import (
+    ALL_TOOLS, TOOL_NAMES, POLICY_DATABASE, DOCUMENT_SUMMARIES,
+    calculate_bonus, lookup_employee_policy, summarize_document, list_available_documents,
+)
 from app.observability.logger import log_tool_use, log_workflow_step, logger
 
 
@@ -56,8 +61,9 @@ Given a user's question, decide which approach is best:
 2. "calculate"   — Use the bonus calculator (use when user explicitly asks to calculate a bonus amount with specific numbers)
 3. "policy"      — Quick policy lookup (use for quick summaries of named policies like vacation, sick_leave, remote_work)
 4. "summarize"   — Document summarizer (use when user says "summarize the [document name]")
+5. "list"        — List available documents (use when user asks what documents/policies exist, or asks to summarize "everything" or "all documents")
 
-Respond with ONLY ONE of these four words: rag, calculate, policy, summarize
+Respond with ONLY ONE of these five words: rag, calculate, policy, summarize, list
 No explanation needed."""
 
 
@@ -102,7 +108,7 @@ def classify_query(query: str, user_id: str) -> str:
         classification = response.content.strip().lower()
 
         # Validate the response is one of our expected values
-        valid_classes = {"rag", "calculate", "policy", "summarize"}
+        valid_classes = {"rag", "calculate", "policy", "summarize", "list"}
         if classification not in valid_classes:
             logger.warning(f"[AGENT] Unexpected classification '{classification}', defaulting to 'rag'")
             classification = "rag"
@@ -162,9 +168,15 @@ Query: """ + query
     return str(result), "calculate_bonus"
 
 
-def execute_policy_tool(query: str, user_id: str) -> Tuple[str, str]:
+def execute_policy_tool(query: str, user_id: str, user_role: Optional[UserRole] = None) -> Tuple[str, str]:
     """
     Extract the policy name from the query and look it up.
+
+    Permission check: before calling the tool, verify the matched policy's
+    access_level is within the user's allowed levels. This prevents a user
+    with no/low role from receiving restricted policy content via the tool
+    path (which bypasses the ChromaDB permission filter used in RAG).
+
     Returns: (tool_result, tool_name)
     """
     log_workflow_step("execute_tool", user_id, "tool=lookup_employee_policy")
@@ -181,9 +193,26 @@ def execute_policy_tool(query: str, user_id: str) -> Tuple[str, str]:
         policy_name = "maternity_paternity"
     elif "performance" in query_lower or "review" in query_lower or "evaluation" in query_lower:
         policy_name = "performance_review"
+    elif "compensation" in query_lower or "salary band" in query_lower or "pay band" in query_lower:
+        policy_name = "compensation_bands"
     else:
-        # Default: extract first meaningful noun
         policy_name = "vacation"
+
+    # ── Permission Check ──────────────────────────────────────────────
+    # Resolve allowed access levels for this user's role.
+    # If user_role is None (unauthenticated), treat as empty — no access.
+    allowed_levels = get_allowed_access_levels(user_role) if user_role else []
+    entry = POLICY_DATABASE.get(policy_name)
+    if entry and entry["access_level"] not in allowed_levels:
+        log_workflow_step(
+            "permission_denied", user_id,
+            f"policy='{policy_name}' requires '{entry['access_level']}', user has {allowed_levels}"
+        )
+        return (
+            "You don't have permission to access this policy. "
+            "Please contact your manager or HR for assistance."
+        ), "lookup_employee_policy"
+    # ─────────────────────────────────────────────────────────────────
 
     result = lookup_employee_policy.invoke({"policy_name": policy_name})
     log_tool_use(user_id, "lookup_employee_policy", policy_name, str(result)[:80])
@@ -191,9 +220,14 @@ def execute_policy_tool(query: str, user_id: str) -> Tuple[str, str]:
     return str(result), "lookup_employee_policy"
 
 
-def execute_summarize_tool(query: str, user_id: str) -> Tuple[str, str]:
+def execute_summarize_tool(query: str, user_id: str, user_role: Optional[UserRole] = None) -> Tuple[str, str]:
     """
     Extract the document name from the query and return its summary.
+
+    Permission check: verify the document's access_level against the user's
+    role before invoking the tool. Prevents the tool path from leaking
+    manager/confidential document summaries to lower-privileged users.
+
     Returns: (tool_result, tool_name)
     """
     log_workflow_step("execute_tool", user_id, "tool=summarize_document")
@@ -205,13 +239,49 @@ def execute_summarize_tool(query: str, user_id: str) -> Tuple[str, str]:
         doc_name = "it_security"
     elif "finance" in query_lower or "financial" in query_lower or "expense" in query_lower:
         doc_name = "finance_policy"
+    elif "exec" in query_lower or "executive" in query_lower or "compensation" in query_lower:
+        doc_name = "exec_compensation"
     else:
         doc_name = "hr_handbook"  # Default
+
+    # ── Permission Check ──────────────────────────────────────────────
+    allowed_levels = get_allowed_access_levels(user_role) if user_role else []
+    entry = DOCUMENT_SUMMARIES.get(doc_name)
+    if entry and entry["access_level"] not in allowed_levels:
+        log_workflow_step(
+            "permission_denied", user_id,
+            f"document='{doc_name}' requires '{entry['access_level']}', user has {allowed_levels}"
+        )
+        return (
+            "You don't have permission to access this document. "
+            "Please contact your manager or HR for assistance."
+        ), "summarize_document"
+    # ─────────────────────────────────────────────────────────────────
 
     result = summarize_document.invoke({"document_name": doc_name})
     log_tool_use(user_id, "summarize_document", doc_name, str(result)[:80])
 
     return str(result), "summarize_document"
+
+
+def execute_list_tool(user_id: str, user_role: Optional[UserRole] = None) -> Tuple[str, str]:
+    """
+    Call list_available_documents filtered to only entries the user can see.
+
+    Permission filtering is applied HERE before invoking the tool — we pass
+    allowed_levels so the tool only lists documents/policies within the user's
+    access level. This prevents existence-leaking: an employee should not even
+    know that confidential documents exist.
+
+    Returns: (tool_result, tool_name)
+    """
+    log_workflow_step("execute_tool", user_id, "tool=list_available_documents")
+
+    allowed_levels = get_allowed_access_levels(user_role) if user_role else []
+
+    result = list_available_documents.invoke({"allowed_levels": allowed_levels})
+    log_tool_use(user_id, "list_available_documents", "n/a", str(result)[:80])
+    return str(result), "list_available_documents"
 
 
 # ──────────────────────────────────────────────
@@ -221,6 +291,7 @@ def execute_summarize_tool(query: str, user_id: str) -> Tuple[str, str]:
 def run_agent(
     query: str,
     user_id: str,
+    user_role: Optional[UserRole] = None,
 ) -> Tuple[str, Optional[str], bool]:
     """
     Main agent function: classify the query and route to the right handler.
@@ -255,11 +326,15 @@ def run_agent(
         return result, tool_name, True
 
     elif classification == "policy":
-        result, tool_name = execute_policy_tool(query, user_id)
+        result, tool_name = execute_policy_tool(query, user_id, user_role)
         return result, tool_name, True
 
     elif classification == "summarize":
-        result, tool_name = execute_summarize_tool(query, user_id)
+        result, tool_name = execute_summarize_tool(query, user_id, user_role)
+        return result, tool_name, True
+
+    elif classification == "list":
+        result, tool_name = execute_list_tool(user_id, user_role)
         return result, tool_name, True
 
     else:

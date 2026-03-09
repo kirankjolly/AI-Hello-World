@@ -37,6 +37,10 @@ SQLITE_DB_PATH: str     = os.getenv("SQLITE_DB_PATH", "./data/metadata.db")
 CHUNK_SIZE: int    = int(os.getenv("CHUNK_SIZE", "500"))
 CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "50"))
 TOP_K_RESULTS: int = int(os.getenv("TOP_K_RESULTS", "4"))
+# WINDOW_SIZE controls sentence window retrieval: how many neighboring chunks
+# to fetch on each side of a matched chunk. WINDOW_SIZE=1 fetches [N-1, N, N+1].
+# Set to 0 to disable sentence window retrieval and use plain top-K only.
+WINDOW_SIZE: int   = int(os.getenv("WINDOW_SIZE", "1"))
 
 # ──────────────────────────────────────────────
 # Rate Limiting Settings

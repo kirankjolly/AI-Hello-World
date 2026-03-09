@@ -187,6 +187,81 @@ class VectorStore:
             logger.error(f"[VECTOR_STORE] Search error: {e}")
             return []
 
+    # ──────────────────────────────────────────────
+    # Sentence Window Retrieval — Neighbor Fetching
+    #
+    # WHY THIS METHOD EXISTS:
+    # similarity_search finds the RIGHT chunk (precision). But a 500-char
+    # chunk is often too narrow for a complete answer — the key sentence
+    # may be cut off at the boundary. This method is the "expand" step:
+    # given a matched chunk at index N, fetch [N-W … N+W] from the same
+    # document using a direct metadata filter (not semantic search).
+    #
+    # This separates two concerns:
+    #   - Finding  : small focused chunks → strong embedding signal
+    #   - Reading  : wide passage         → complete context for the LLM
+    # ──────────────────────────────────────────────
+
+    def fetch_neighbors(
+        self,
+        doc_id: str,
+        start_index: int,
+        end_index: int,
+        allowed_access_levels: List[str],
+    ) -> List[tuple]:
+        """
+        Fetch a contiguous range of chunks from a single document by index.
+
+        Uses a direct ChromaDB metadata filter — NOT vector similarity search.
+        This means results are deterministic and always returned in document order.
+
+        Args:
+            doc_id:                 Source document to fetch from
+            start_index:            First chunk_index to include (inclusive)
+            end_index:              Last chunk_index to include (inclusive)
+            allowed_access_levels:  Permission filter — re-applied here for
+                                    defense-in-depth (same list as similarity_search)
+
+        Returns:
+            List of (chunk_index, content) tuples sorted by chunk_index.
+            Returns [] if nothing found, access levels empty, or on error.
+        """
+        if not allowed_access_levels:
+            return []
+
+        store = self._get_store()
+        try:
+            collection = store._collection
+
+            # $and is required when combining multiple field conditions in ChromaDB
+            where_filter = {
+                "$and": [
+                    {"doc_id":       {"$eq":  doc_id}},
+                    {"chunk_index":  {"$gte": start_index}},
+                    {"chunk_index":  {"$lte": end_index}},
+                    {"access_level": {"$in":  allowed_access_levels}},
+                ]
+            }
+
+            result = collection.get(
+                where=where_filter,
+                include=["documents", "metadatas"]
+            )
+
+            # documents and metadatas lists are positionally aligned
+            neighbors = []
+            for content, meta in zip(result["documents"], result["metadatas"]):
+                idx = meta.get("chunk_index", 0)
+                neighbors.append((idx, content))
+
+            # Sort by chunk_index so content is joined in document order
+            neighbors.sort(key=lambda x: x[0])
+            return neighbors
+
+        except Exception as e:
+            logger.error(f"[VECTOR_STORE] fetch_neighbors error doc_id={doc_id}: {e}")
+            return []
+
     def list_documents(self) -> List[Dict]:
         """
         Return a summary of all stored documents.
