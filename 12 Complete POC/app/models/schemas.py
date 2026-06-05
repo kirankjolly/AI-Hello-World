@@ -25,6 +25,7 @@ class UserRole(str, Enum):
     EMPLOYEE  = "employee"   # Access: public documents only
     MANAGER   = "manager"    # Access: public + manager documents
     ADMIN     = "admin"      # Access: all documents (including confidential)
+    HR        = "hr"         # Access: public + manager documents (HR staff)
 
 
 class AccessLevel(str, Enum):
@@ -79,14 +80,15 @@ class IngestResponse(BaseModel):
 
 class QueryRequest(BaseModel):
     """Request body for POST /ask"""
-    query:   str    = Field(..., description="The user's question")
-    user_id: str    = Field(..., description="ID of the requesting user")
+    query:      str            = Field(..., description="The user's question")
+    user_id:    Optional[str]  = Field(None, description="Deprecated — user identity comes from JWT token")
+    session_id: Optional[str]  = None
 
     class Config:
         json_schema_extra = {
             "example": {
                 "query": "How many vacation days do employees get?",
-                "user_id": "emp_001"
+                "session_id": None
             }
         }
 
@@ -107,6 +109,7 @@ class QueryResponse(BaseModel):
     used_tool:     Optional[str]  = None   # name of tool if agent used one
     is_from_docs:  bool           = True   # False if answer came from a tool
     user_id:       str
+    session_id:    Optional[str]  = None
     error:         Optional[str]  = None
 
 
@@ -140,3 +143,68 @@ class RetrievedChunk(BaseModel):
     access_level: str
     content:      str
     score:        float = 0.0   # Cosine similarity score (higher = more relevant)
+
+
+# ──────────────────────────────────────────────
+# Auth Models
+# ──────────────────────────────────────────────
+
+class LoginRequest(BaseModel):
+    email:    str = Field(..., description="Employee email address")
+    password: str = Field(..., description="Employee password")
+
+    class Config:
+        json_schema_extra = {
+            "example": {"email": "alice@company.com", "password": "password123"}
+        }
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type:   str = "bearer"
+    user_id:      str
+    name:         str
+    role:         str
+    department:   str
+
+
+# ──────────────────────────────────────────────
+# Employee & Project Models
+# ──────────────────────────────────────────────
+
+class EmployeeResponse(BaseModel):
+    id:           int
+    employee_id:  str
+    name:         str
+    email:        str
+    department:   str
+    role:         str
+    joining_date: str
+    is_active:    int
+
+
+class ProjectResponse(BaseModel):
+    id:                    int
+    name:                  str
+    start_date:            str
+    end_date:              Optional[str]
+    status:                str
+    assignee_name:         Optional[str]
+    assignee_employee_id:  Optional[str]
+
+
+# ──────────────────────────────────────────────
+# Session & Message Models
+# ──────────────────────────────────────────────
+
+class SessionResponse(BaseModel):
+    session_id: str
+    title:      str
+    created_at: str
+    updated_at: str
+
+
+class MessageResponse(BaseModel):
+    role:       str
+    content:    str
+    created_at: str

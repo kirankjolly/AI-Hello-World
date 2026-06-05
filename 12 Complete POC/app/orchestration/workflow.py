@@ -40,6 +40,8 @@ GRAPH STRUCTURE:
     ↓
   generate_answer       — Call LLM with retrieved context
     ↓
+  validate_grounding    — LLM-as-judge hallucination check
+    ↓
   format_response       — Add citations, finalize
     ↓
   END
@@ -51,10 +53,11 @@ from langgraph.graph import StateGraph, END, START
 
 from app.models.schemas import UserRole, RetrievedChunk, Citation, QueryResponse
 from app.security.permissions import validate_user, get_user_role
-from app.security.guardrails import run_all_guardrails
+from app.security.guardrails import run_all_guardrails, validate_answer_grounding
 from app.rag.retriever import retrieve_documents, generate_rag_answer, build_context
 from app.agents.knowledge_agent import run_agent
 from app.observability.logger import log_workflow_step, log_error, logger
+from app.memory.conversation import get_or_create_session, load_history, save_exchange
 
 
 # ──────────────────────────────────────────────
@@ -69,6 +72,10 @@ class WorkflowState(TypedDict):
     # Input
     query:          str
     user_id:        str
+
+    # Session
+    session_id:           Optional[str]
+    conversation_history: List[dict]
 
     # Permission Resolution
     user_role:      Optional[UserRole]
@@ -90,6 +97,11 @@ class WorkflowState(TypedDict):
     # Final Answer
     answer:         str
     citations:      List[Any]  # List[Citation]
+
+    # Grounding Check
+    grounding_passed:  bool
+    grounding_reason:  str
+
     error:          Optional[str]
 
 
@@ -233,12 +245,46 @@ def node_generate_answer(state: WorkflowState) -> dict:
             query=state["query"],
             chunks=chunks,
             user_id=state["user_id"],
+            conversation_history=state.get("conversation_history", []),
         )
 
     return {
         "answer":    answer,
         "citations": citations,
     }
+
+
+def node_validate_grounding(state: WorkflowState) -> dict:
+    """
+    Post-generation guardrail: LLM-as-judge hallucination check.
+    Replaces the answer with a safe fallback if hallucination is detected.
+    """
+    log_workflow_step("validate_grounding", state["user_id"])
+
+    # Only check RAG answers (tool results are deterministic, not LLM-generated)
+    if state.get("use_tool"):
+        return {"grounding_passed": True, "grounding_reason": "tool_path_skipped"}
+
+    answer  = state.get("answer", "")
+    context = state.get("context", "")
+
+    passed, reason = validate_answer_grounding(answer, context)
+
+    if not passed:
+        logger.warning(
+            f"[GUARDRAIL] Hallucination detected for user={state['user_id']} | reason={reason}"
+        )
+        safe_answer = (
+            "I found relevant documents but could not generate a fully supported answer. "
+            "Please rephrase your question or contact HR/IT directly."
+        )
+        return {
+            "grounding_passed": False,
+            "grounding_reason": reason,
+            "answer": safe_answer,
+        }
+
+    return {"grounding_passed": True, "grounding_reason": ""}
 
 
 def node_format_response(state: WorkflowState) -> dict:
@@ -352,6 +398,7 @@ def build_workflow() -> Any:
     graph.add_node("retrieve_documents",       node_retrieve_documents)
     graph.add_node("build_context",            node_build_context)
     graph.add_node("generate_answer",          node_generate_answer)
+    graph.add_node("validate_grounding",       node_validate_grounding)
     graph.add_node("format_response",          node_format_response)
     graph.add_node("end_with_error",           node_end_with_error)
     graph.add_node("end_with_guardrail_block", node_end_with_guardrail_block)
@@ -395,9 +442,10 @@ def build_workflow() -> Any:
     graph.add_edge("retrieve_documents", "build_context")
     graph.add_edge("build_context",      "generate_answer")
 
-    # Both paths converge at generate_answer → format → END
-    graph.add_edge("generate_answer",   "format_response")
-    graph.add_edge("format_response",   END)
+    # Both paths converge at generate_answer → validate_grounding → format → END
+    graph.add_edge("generate_answer",    "validate_grounding")
+    graph.add_edge("validate_grounding", "format_response")
+    graph.add_edge("format_response",    END)
 
     # Error terminals → END
     graph.add_edge("end_with_error",           END)
@@ -419,45 +467,62 @@ workflow = build_workflow()
 # Public API
 # ──────────────────────────────────────────────
 
-def run_workflow(query: str, user_id: str) -> WorkflowState:
+def run_workflow(query: str, user_id: str, session_id: Optional[str] = None) -> WorkflowState:
     """
     Execute the complete workflow for a user query.
 
     This is the main entry point called by the FastAPI routes.
     It runs the full LangGraph: validation → guardrails → agent
-    → retrieval → generation → formatting.
+    → retrieval → generation → grounding check → formatting.
 
     Args:
-        query:   The user's question
-        user_id: The authenticated user's ID
+        query:      The user's question
+        user_id:    The authenticated user's ID
+        session_id: Optional existing session ID for conversation continuity
 
     Returns:
         Final WorkflowState with answer, citations, and metadata
     """
+    # Resolve session
+    resolved_session_id = get_or_create_session(user_id, session_id)
+
+    # Load conversation history
+    history = load_history(resolved_session_id)
+
     initial_state: WorkflowState = {
-        "query":              query,
-        "user_id":            user_id,
-        "user_role":          None,
-        "is_valid_user":      False,
-        "passed_guardrails":  False,
-        "guardrail_error":    "",
-        "use_tool":           False,
-        "tool_name":          None,
-        "tool_result":        None,
-        "retrieved_chunks":   [],
-        "context":            "",
-        "answer":             "",
-        "citations":          [],
-        "error":              None,
+        "query":               query,
+        "user_id":             user_id,
+        "session_id":          resolved_session_id,
+        "conversation_history": history,
+        "user_role":           None,
+        "is_valid_user":       False,
+        "passed_guardrails":   False,
+        "guardrail_error":     "",
+        "use_tool":            False,
+        "tool_name":           None,
+        "tool_result":         None,
+        "retrieved_chunks":    [],
+        "context":             "",
+        "answer":              "",
+        "citations":           [],
+        "grounding_passed":    True,
+        "grounding_reason":    "",
+        "error":               None,
     }
 
-    logger.info(f"[WORKFLOW] Starting for user={user_id} | query='{query[:60]}'")
+    logger.info(f"[WORKFLOW] Starting for user={user_id} | session={resolved_session_id} | query='{query[:60]}'")
 
     try:
         final_state = workflow.invoke(initial_state)
+        # Persist the exchange to the session
+        answer = final_state.get("answer", "")
+        if answer and not final_state.get("error"):
+            save_exchange(resolved_session_id, query, answer)
+        final_state["session_id"] = resolved_session_id
         return final_state
     except Exception as e:
         log_error(user_id, str(e), "workflow_execution")
         initial_state["answer"] = f"An internal error occurred: {str(e)}"
         initial_state["error"]  = str(e)
+        initial_state["session_id"] = resolved_session_id
         return initial_state

@@ -39,20 +39,6 @@ from app.observability.logger import log_permission_denied, log_workflow_step
 
 
 # ──────────────────────────────────────────────
-# Simulated User Database
-# In production this would be your auth system (JWT, OAuth, LDAP...)
-# ──────────────────────────────────────────────
-
-USERS: Dict[str, Dict] = {
-    "emp_001": {"name": "Alice Johnson",  "role": UserRole.EMPLOYEE},
-    "emp_002": {"name": "Bob Smith",      "role": UserRole.EMPLOYEE},
-    "mgr_001": {"name": "Carol Williams", "role": UserRole.MANAGER},
-    "mgr_002": {"name": "David Brown",    "role": UserRole.MANAGER},
-    "adm_001": {"name": "Eve Davis",      "role": UserRole.ADMIN},
-}
-
-
-# ──────────────────────────────────────────────
 # Permission Mapping
 # Maps a user role to the list of access levels they can see
 # ──────────────────────────────────────────────
@@ -62,20 +48,34 @@ ROLE_ACCESS_MAP: Dict[UserRole, List[str]] = {
     UserRole.MANAGER:  [AccessLevel.PUBLIC.value, AccessLevel.MANAGER.value],
     UserRole.ADMIN:    [AccessLevel.PUBLIC.value, AccessLevel.MANAGER.value,
                         AccessLevel.CONFIDENTIAL.value],
+    UserRole.HR:       [AccessLevel.PUBLIC.value, AccessLevel.MANAGER.value],
 }
 
 
-def get_user(user_id: str) -> Optional[Dict]:
-    """Retrieve user info. Returns None if user not found."""
-    return USERS.get(user_id)
+# ──────────────────────────────────────────────
+# User Lookup — SQLite backed
+# Future: swap get_employee_by_id() for a PostgreSQL / LDAP call
+# ──────────────────────────────────────────────
 
-
-def get_user_role(user_id: str) -> Optional[UserRole]:
-    """Return the role for a given user_id."""
-    user = get_user(user_id)
-    if user is None:
+def get_user(user_id: str) -> dict | None:
+    """
+    Retrieve user info from app.db.
+    Returns dict with 'name' and 'role' keys (same shape as old USERS dict)
+    so all callers are unchanged.
+    """
+    from app.db.app_db import get_employee_by_id
+    employee = get_employee_by_id(user_id)
+    if not employee:
         return None
-    return user["role"]
+    return {
+        "name": employee["name"],
+        "role": UserRole(employee["role"]),
+    }
+
+
+def get_user_role(user_id: str) -> UserRole | None:
+    user = get_user(user_id)
+    return user["role"] if user else None
 
 
 def get_allowed_access_levels(user_role: UserRole) -> List[str]:
@@ -108,13 +108,7 @@ def can_user_access_document(user_role: UserRole, doc_access_level: str) -> bool
 
 
 def validate_user(user_id: str) -> tuple[bool, Optional[UserRole], str]:
-    """
-    Validate a user exists and return their role.
-
-    Returns:
-        (is_valid, role, error_message)
-    """
     user = get_user(user_id)
     if user is None:
-        return False, None, f"User '{user_id}' not found. Valid users: {list(USERS.keys())}"
+        return False, None, f"User '{user_id}' not found."
     return True, user["role"], ""

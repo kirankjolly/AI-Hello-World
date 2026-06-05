@@ -29,7 +29,7 @@ EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-ada-002")
 # Storage Settings
 # ──────────────────────────────────────────────
 CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./data/chroma_db")
-SQLITE_DB_PATH: str     = os.getenv("SQLITE_DB_PATH", "./data/metadata.db")
+# SQLITE_DB_PATH removed — see APP_DB_PATH, SESSIONS_DB_PATH, RATE_LIMIT_DB_PATH
 
 # ──────────────────────────────────────────────
 # RAG Settings
@@ -54,3 +54,20 @@ RATE_LIMIT_WINDOW: int   = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # seconds
 APP_TITLE: str       = "AI Knowledge Assistant"
 APP_VERSION: str     = "1.0.0"
 COLLECTION_NAME: str = "company_documents"
+
+# ── Auth ──
+JWT_SECRET_KEY: str  = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-production-min-32-chars!")
+JWT_ALGORITHM: str   = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_DAYS: int = int(os.getenv("JWT_EXPIRE_DAYS", "30"))
+
+# ── Database Paths ──
+APP_DB_PATH:        str = os.getenv("APP_DB_PATH",        "./data/app.db")
+SESSIONS_DB_PATH:   str = os.getenv("SESSIONS_DB_PATH",   "./data/sessions.db")
+RATE_LIMIT_DB_PATH: str = os.getenv("RATE_LIMIT_DB_PATH", "./data/rate_limit.db")
+
+# ── LangSmith ──
+LANGSMITH_API_KEY: str = os.getenv("LANGSMITH_API_KEY", "")
+LANGSMITH_PROJECT: str = os.getenv("LANGSMITH_PROJECT", "ai-knowledge-assistant")
+
+# ── File Processing ──
+MOCK_FILE_PROCESSING: bool = os.getenv("MOCK_FILE_PROCESSING", "true").lower() == "true"

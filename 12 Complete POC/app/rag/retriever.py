@@ -32,7 +32,9 @@ The system prompt enforces this by saying:
 """
 
 from typing import List, Tuple, Optional, NamedTuple
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+import httpx
 
 from app.config import ANTHROPIC_API_KEY, OPENAI_API_KEY, LLM_MODEL, LLM_PROVIDER, TOP_K_RESULTS, WINDOW_SIZE
 from app.models.schemas import UserRole, RetrievedChunk, Citation
@@ -41,6 +43,7 @@ from app.vector_store.chroma_store import vector_store
 from app.observability.logger import (
     log_retrieval, log_llm_call, log_workflow_step, logger
 )
+from app.llm.factory import get_llm
 
 
 # ──────────────────────────────────────────────
@@ -61,32 +64,18 @@ class _IndexedChunk(NamedTuple):
 
 
 # ──────────────────────────────────────────────
-# LLM Setup
+# LLM Retry Helper
 # ──────────────────────────────────────────────
 
-def get_llm():
-    """
-    Return a configured LLM instance based on LLM_PROVIDER setting.
-
-    LLM_PROVIDER=openai    → ChatOpenAI  (only OPENAI_API_KEY needed)
-    LLM_PROVIDER=anthropic → ChatAnthropic (ANTHROPIC_API_KEY needed)
-    """
-    if LLM_PROVIDER == "anthropic":
-        from langchain_anthropic import ChatAnthropic
-        return ChatAnthropic(
-            model=LLM_MODEL,
-            anthropic_api_key=ANTHROPIC_API_KEY,
-            temperature=0,
-            max_tokens=1024,
-        )
-    else:  # default: openai
-        from langchain_openai import ChatOpenAI
-        return ChatOpenAI(
-            model=LLM_MODEL,
-            openai_api_key=OPENAI_API_KEY,
-            temperature=0,
-            max_tokens=1024,
-        )
+@retry(
+    wait=wait_exponential(multiplier=1, min=2, max=8),
+    stop=stop_after_attempt(3),
+    retry=retry_if_exception_type((httpx.TimeoutException, Exception)),
+    reraise=True,
+)
+def _call_llm_with_retry(llm, messages):
+    """Isolated LLM call with retry logic."""
+    return llm.invoke(messages)
 
 
 # ──────────────────────────────────────────────
@@ -328,14 +317,15 @@ def generate_rag_answer(
     query: str,
     chunks: List[RetrievedChunk],
     user_id: str,
+    conversation_history: list = None,
 ) -> Tuple[str, List[Citation]]:
     """
     Generate a grounded answer using RAG.
 
     Pipeline:
       1. Build context string from retrieved chunks
-      2. Construct the prompt: system rules + context + user question
-      3. Call the LLM
+      2. Construct the prompt: system rules + history + context + user question
+      3. Call the LLM (with retry)
       4. Extract citations from the retrieved chunks
 
     The system prompt enforces "answer only from context" — this
@@ -363,14 +353,17 @@ Please answer based only on the documents above."""
     # Log token estimate (rough: 1 token ≈ 4 chars)
     log_llm_call(user_id, LLM_MODEL, len(user_message) // 4, len(context))
 
-    # Step 3: Call LLM
-    llm = get_llm()
-    messages = [
-        SystemMessage(content=RAG_SYSTEM_PROMPT),
-        HumanMessage(content=user_message),
-    ]
+    # Step 3: Build messages with conversation history
+    llm = get_llm(temperature=0.0)
+    messages = [SystemMessage(content=RAG_SYSTEM_PROMPT)]
+    for msg in (conversation_history or []):
+        if msg["role"] == "user":
+            messages.append(HumanMessage(content=msg["content"]))
+        elif msg["role"] == "assistant":
+            messages.append(AIMessage(content=msg["content"]))
+    messages.append(HumanMessage(content=user_message))
 
-    response = llm.invoke(messages)
+    response = _call_llm_with_retry(llm, messages)
     answer = response.content
 
     # Step 4: Build citations from retrieved chunks

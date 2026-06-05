@@ -1,0 +1,29 @@
+DESCRIPTION
+-----------
+Delivered an enterprise AI Knowledge Assistant integrated into an existing Angular and Java platform, introducing a Python FastAPI microservice without modifying the existing backend. The Angular app was extended with a user chat window and an admin portal for document ingestion and access-level management.
+
+The core is a RAG pipeline orchestrated with LangGraph — an AI agent classifies each query and routes it to either document retrieval or a structured tool. Retrieval fetches permission-filtered content from a Qdrant vector store, then OpenAI GPT-4o generates answers grounded strictly in those documents, with text-embedding-3-small handling semantic search.
+
+Security is layered: RBAC enforced at the vector query level across three document tiers, multi-layer guardrails covering prompt injection and off-topic filtering, and a post-generation LLM-as-judge hallucination check. Redis manages conversation memory and rate limiting across all stateless pods. An OpenAPI 3.0 contract with JWT authentication provides the Angular integration surface.
+
+Deployed on Stackit with Kubernetes — horizontal autoscaling, Ingress load balancing, rolling zero-downtime deployments, Qdrant on a persistent volume, and LangSmith for end-to-end LLM tracing.
+
+
+TECHNOLOGIES
+------------
+Python, FastAPI, LangGraph, LangChain, Angular, Java, OpenAI GPT-4o, OpenAI text-embedding-3-small, Qdrant, Redis, PostgreSQL, Docker, Kubernetes, Stackit
+
+
+TOOLS & FRAMEWORKS
+------------------
+LangSmith, Pydantic, Uvicorn, Swagger UI, Kubernetes Ingress, JWT, OpenAPI 3.0
+
+
+CONCEPTS
+--------
+Retrieval Augmented Generation (RAG), Vector Embeddings, Semantic Search, Permission-Aware Retrieval, Role-Based Access Control (RBAC), Multi-Layer Guardrails, Prompt Injection Protection, Hallucination Detection, LLM-as-Judge, Conversation Memory, Rate Limiting, Workflow Orchestration, Microservices Architecture, Stateless Horizontal Scaling, Rolling Deployments, AI Agent Tool Use
+
+
+INDUSTRY
+--------
+Enterprise Software, Knowledge Management, AI-Augmented Platforms, Internal Tooling, HR Technology, Cloud Native Applications

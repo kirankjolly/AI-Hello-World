@@ -168,16 +168,57 @@ def run_all_guardrails(query: str, user_id: str) -> Tuple[bool, str]:
 
 def validate_answer_grounding(answer: str, context: str) -> Tuple[bool, str]:
     """
-    Post-generation guardrail: check that the answer doesn't make claims
-    that seem to contradict the retrieved context being empty.
+    Post-generation guardrail: LLM-as-judge hallucination check.
 
-    Simple heuristic: if we had no context but the answer makes specific
-    claims, flag it as potentially hallucinated.
+    A second LLM call evaluates whether the generated answer is supported
+    by the retrieved context. This catches hallucinations where the LLM
+    fabricates facts not present in the source documents.
 
-    In production, this would use an LLM-as-judge approach.
+    Fails open (returns True) if the judge call itself errors — we don't
+    want a monitoring system to block valid answers due to its own failures.
+
+    In production: consider caching judge results for identical (answer, context)
+    pairs to reduce cost.
     """
-    # If context is empty but answer makes specific numerical claims
-    if not context.strip() and any(char.isdigit() for char in answer):
-        return False, "Answer contains specific claims but no supporting documents were retrieved. This may be hallucinated."
+    if not context.strip():
+        # No context was retrieved — flag if answer makes specific claims
+        if any(char.isdigit() for char in answer):
+            return False, "Answer contains specific claims but no source documents were retrieved."
+        return True, ""
 
-    return True, ""
+    judge_prompt = f"""You are an AI fact-checker. Your job is to determine if an answer is grounded in the provided context.
+
+CONTEXT:
+{context[:3000]}
+
+ANSWER:
+{answer[:1000]}
+
+Does the ANSWER contain specific factual claims that are NOT supported by or contradict the CONTEXT?
+Respond with exactly one of:
+- "NO" if the answer is well-grounded in the context
+- "YES: <brief reason>" if the answer contains unsupported or contradictory claims
+
+Response:"""
+
+    try:
+        from app.llm.factory import get_llm
+        from langchain_core.messages import HumanMessage
+
+        llm = get_llm(temperature=0.0)
+        response = llm.invoke([HumanMessage(content=judge_prompt)])
+        verdict = response.content.strip()
+
+        if verdict.upper().startswith("YES"):
+            reason = verdict[3:].strip(": ").strip() if len(verdict) > 3 else "Unsupported claims detected"
+            return False, reason
+
+        return True, ""
+
+    except Exception as e:
+        # Fail open — log and allow the answer through
+        import logging
+        logging.getLogger(__name__).warning(
+            f"[GUARDRAIL] validate_answer_grounding failed (fail-open): {e}"
+        )
+        return True, ""

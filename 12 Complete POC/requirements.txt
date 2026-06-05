@@ -37,6 +37,17 @@ sqlalchemy>=1.4
 pydantic>=2.9.0
 pydantic-settings>=2.6.0
 
+# --- Auth & Security ---
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.9
+
+# --- Retry Logic ---
+tenacity>=8.2.0
+
+# --- Observability ---
+langsmith>=0.1.0
+
 # --- Utilities ---
 python-dotenv>=1.0.0
 tiktoken>=0.8.0

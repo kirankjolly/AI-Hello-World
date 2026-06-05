@@ -111,6 +111,26 @@ app.include_router(router, prefix="/api/v1")
 
 @app.on_event("startup")
 async def startup_event():
+    # Initialize SQLite databases
+    from app.db.app_db import init_app_db
+    from app.db.sessions_db import init_sessions_db
+    from app.db.rate_limit_db import init_rate_limit_db
+
+    init_app_db()
+    init_sessions_db()
+    init_rate_limit_db()
+
+    # Configure LangSmith tracing if API key is set
+    from app.config import LANGSMITH_API_KEY, LANGSMITH_PROJECT
+    if LANGSMITH_API_KEY:
+        import os
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_API_KEY"]    = LANGSMITH_API_KEY
+        os.environ["LANGCHAIN_PROJECT"]    = LANGSMITH_PROJECT
+        logger.info(f"  LangSmith tracing enabled — project: {LANGSMITH_PROJECT}")
+    else:
+        logger.info("  LangSmith tracing disabled (set LANGSMITH_API_KEY to enable)")
+
     logger.info("=" * 60)
     logger.info(f"  {APP_TITLE} v{APP_VERSION} starting up...")
     logger.info("  Architecture: FastAPI → LangGraph → RAG → ChromaDB → Claude")
